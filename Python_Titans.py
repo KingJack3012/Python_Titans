@@ -59,20 +59,6 @@ st.title("🌡️ Conduction Heat Transfer Through a Composite Wall")
 
 st.subheader("Diploma in Mechanical Engineering - Semester 3")
 
-st.info(
-    f"""
-**{GROUP_NO}**
-
-**Members:**
-
-{chr(10).join("- " + member for member in MEMBERS)}
-
-**Enrollments:**
-
-{chr(10).join("- " + enrollment for enrollment in ENROLLMENTS)}
-"""
-)
-
 
 st.write(
     """
@@ -1546,6 +1532,21 @@ else:
 # ============================================================
 
 st.divider()
+
+st.info(
+    f"""
+**{GROUP_NO}**
+
+**Members:**
+
+{chr(10).join("- " + member for member in MEMBERS)}
+
+**Enrollments:**
+
+{chr(10).join("- " + enrollment for enrollment in ENROLLMENTS)}
+"""
+)
+
 
 
 st.caption(

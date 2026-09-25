@@ -2,6 +2,8 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import streamlit.components.v1 as components
+import json
 
 
 # ============================================================
@@ -20,11 +22,12 @@ st.set_page_config(
 # CHANGE THESE LATER
 # ============================================================
 
-GROUP_NO = "Python Titans"
+GROUP_NO = "Group No. PYTHON TITANS"
 
-MEMBERS = ["Moksh Dhaval Dave",
-"Jay Paraskumar Chaudhary",
-"Anmol Arvindbhai Prajapati"
+MEMBERS = [
+    "Moksh Dhaval Dave",
+    "Jay Paraskumar Chaudhary",
+    "Anmol Arvindbhai Prajapati"
           ]
 
 ENROLLMENTS = [
@@ -32,6 +35,7 @@ ENROLLMENTS = [
     " 25012250610046 ",
     " 25012250610064 "
 ]
+
 
 # ============================================================
 # MATERIAL DATABASE
@@ -60,12 +64,15 @@ st.info(
 **{GROUP_NO}**
 
 **Members:**
+
 {chr(10).join("- " + member for member in MEMBERS)}
 
 **Enrollments:**
+
 {chr(10).join("- " + enrollment for enrollment in ENROLLMENTS)}
 """
 )
+
 
 st.write(
     """
@@ -397,84 +404,919 @@ if calculate:
 
 
     # ========================================================
-    # COMPOSITE WALL DIAGRAM
+    # ANIMATED COMPOSITE WALL
     # ========================================================
 
-    st.subheader("🧱 Composite Wall Diagram")
+    st.subheader("🧱 Animated Composite Wall")
 
 
-    total_thickness = L1 + L2 + L3
+    animation_data = {
+        "material1": material1,
+        "material2": material2,
+        "material3": material3,
+
+        "L1": L1,
+        "L2": L2,
+        "L3": L3,
+
+        "T_inside": inside_temperature,
+        "T_interface1": T_interface1,
+        "T_interface2": T_interface2,
+        "T_interface3": T_interface3,
+        "T_outside": outside_temperature,
+
+        "Q": Q,
+        "area": area
+    }
 
 
-    width1 = L1 / total_thickness
-
-    width2 = L2 / total_thickness
-
-    width3 = L3 / total_thickness
+    animation_json = json.dumps(animation_data)
 
 
-    fig1, ax1 = plt.subplots(
-        figsize=(12, 2.5)
+    ANIMATION_HTML = """
+    <style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f3f8fc;
+    }
+
+    .card {
+        background: white;
+        border: 1px solid #cfdde8;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+
+        padding: 10px 14px;
+
+        border-bottom: 1px solid #dce7ef;
+
+        color: #17384d;
+
+        font-size: 13px;
+    }
+
+    button {
+        background: #0b2a43;
+        color: white;
+
+        border: none;
+        border-radius: 6px;
+
+        padding: 7px 14px;
+
+        cursor: pointer;
+
+        font-size: 13px;
+    }
+
+    button:hover {
+        background: #174c6d;
+    }
+
+    .legend {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .dot {
+        width: 11px;
+        height: 11px;
+
+        border-radius: 50%;
+
+        display: inline-block;
+    }
+
+    .hot {
+        background: #e74c3c;
+    }
+
+    .cold {
+        background: #3498db;
+    }
+
+    canvas {
+        display: block;
+
+        width: 100%;
+        height: 500px;
+    }
+
+    </style>
+
+
+    <div class="card">
+
+        <div class="toolbar">
+
+            <button id="replay">
+                ↻ Replay Animation
+            </button>
+
+            <span class="legend">
+                <span class="dot hot"></span>
+                Hot side
+            </span>
+
+            <span class="legend">
+                <span class="dot cold"></span>
+                Cold side
+            </span>
+
+            <span>
+                ➜ Heat flows from hot side to cold side
+            </span>
+
+        </div>
+
+        <canvas id="wallCanvas"></canvas>
+
+    </div>
+
+
+    <script>
+
+    const D = __DATA__;
+
+    const canvas =
+        document.getElementById("wallCanvas");
+
+    const ctx =
+        canvas.getContext("2d");
+
+    let W = 1000;
+
+    let H = 500;
+
+    let dpr =
+        window.devicePixelRatio || 1;
+
+    let startTime =
+        performance.now();
+
+
+    // ----------------------------------------------------
+    // Canvas resize
+    // ----------------------------------------------------
+
+    function resizeCanvas() {
+
+        W = canvas.getBoundingClientRect().width;
+
+        canvas.width = W * dpr;
+
+        canvas.height = H * dpr;
+
+    }
+
+    window.addEventListener(
+        "resize",
+        resizeCanvas
+    );
+
+    resizeCanvas();
+
+
+    // ----------------------------------------------------
+    // Replay
+    // ----------------------------------------------------
+
+    document
+        .getElementById("replay")
+        .onclick = function() {
+
+            startTime =
+                performance.now();
+
+        };
+
+
+    // ----------------------------------------------------
+    // Easing
+    // ----------------------------------------------------
+
+    function ease(t) {
+
+        t =
+            Math.max(
+                0,
+                Math.min(1, t)
+            );
+
+        return t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(
+                -2 * t + 2,
+                3
+            ) / 2;
+
+    }
+
+
+    // ----------------------------------------------------
+    // Arrow
+    // ----------------------------------------------------
+
+    function drawArrow(
+        x1,
+        y1,
+        x2,
+        y2,
+        color
+    ) {
+
+        const angle =
+            Math.atan2(
+                y2 - y1,
+                x2 - x1
+            );
+
+        const head = 9;
+
+
+        ctx.strokeStyle = color;
+
+        ctx.fillStyle = color;
+
+        ctx.lineWidth = 3;
+
+        ctx.lineCap = "round";
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(x1, y1);
+
+        ctx.lineTo(x2, y2);
+
+        ctx.stroke();
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(x2, y2);
+
+        ctx.lineTo(
+            x2 - head *
+            Math.cos(angle - 0.5),
+
+            y2 - head *
+            Math.sin(angle - 0.5)
+        );
+
+        ctx.lineTo(
+            x2 - head *
+            Math.cos(angle + 0.5),
+
+            y2 - head *
+            Math.sin(angle + 0.5)
+        );
+
+        ctx.closePath();
+
+        ctx.fill();
+
+    }
+
+
+    // ----------------------------------------------------
+    // Heat particle
+    // ----------------------------------------------------
+
+    function drawParticle(x, y) {
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y,
+            5,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle = "#ff6b35";
+
+        ctx.shadowColor = "#ff6b35";
+
+        ctx.shadowBlur = 10;
+
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+    }
+
+
+    // ----------------------------------------------------
+    // Main animation
+    // ----------------------------------------------------
+
+    function animate(now) {
+
+        const elapsed =
+            (now - startTime) / 1000;
+
+        const cycle =
+            elapsed % 4;
+
+        const progress =
+            cycle / 4;
+
+
+        ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
+        );
+
+
+        ctx.clearRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+
+        // ------------------------------------------------
+        // Background
+        // ------------------------------------------------
+
+        ctx.fillStyle = "#f3f8fc";
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+
+        // ------------------------------------------------
+        // Wall dimensions
+        // ------------------------------------------------
+
+        const wallLeft =
+            W * 0.25;
+
+        const wallRight =
+            W * 0.75;
+
+        const wallTop = 145;
+
+        const wallHeight = 210;
+
+        const wallWidth =
+            wallRight - wallLeft;
+
+
+        const totalL =
+            D.L1 +
+            D.L2 +
+            D.L3;
+
+
+        const w1 =
+            wallWidth *
+            D.L1 /
+            totalL;
+
+        const w2 =
+            wallWidth *
+            D.L2 /
+            totalL;
+
+        const w3 =
+            wallWidth *
+            D.L3 /
+            totalL;
+
+
+        // ------------------------------------------------
+        // Hot area
+        // ------------------------------------------------
+
+        ctx.fillStyle = "#fff1eb";
+
+        ctx.fillRect(
+            0,
+            wallTop,
+            wallLeft,
+            wallHeight
+        );
+
+
+        // ------------------------------------------------
+        // Cold area
+        // ------------------------------------------------
+
+        ctx.fillStyle = "#eaf5ff";
+
+        ctx.fillRect(
+            wallRight,
+            wallTop,
+            W - wallRight,
+            wallHeight
+        );
+
+
+        // ------------------------------------------------
+        // Hot side
+        // ------------------------------------------------
+
+        ctx.textAlign = "center";
+
+        ctx.font =
+            "bold 18px Segoe UI";
+
+        ctx.fillStyle = "#d63b27";
+
+        ctx.fillText(
+            "🔥 HOT SIDE",
+            wallLeft / 2,
+            wallTop - 35
+        );
+
+
+        ctx.font =
+            "bold 16px Segoe UI";
+
+        ctx.fillText(
+            D.T_inside.toFixed(1) +
+            " °C",
+
+            wallLeft / 2,
+            wallTop - 10
+        );
+
+
+        // ------------------------------------------------
+        // Cold side
+        // ------------------------------------------------
+
+        ctx.fillStyle = "#2779b8";
+
+        ctx.font =
+            "bold 18px Segoe UI";
+
+        ctx.fillText(
+            "❄️ COLD SIDE",
+
+            wallRight +
+            (W - wallRight) / 2,
+
+            wallTop - 35
+        );
+
+
+        ctx.font =
+            "bold 16px Segoe UI";
+
+        ctx.fillText(
+            D.T_outside.toFixed(1) +
+            " °C",
+
+            wallRight +
+            (W - wallRight) / 2,
+
+            wallTop - 10
+        );
+
+
+        // ------------------------------------------------
+        // Layer 1
+        // ------------------------------------------------
+
+        ctx.fillStyle = "#d98c5f";
+
+        ctx.fillRect(
+            wallLeft,
+            wallTop,
+            w1,
+            wallHeight
+        );
+
+
+        // ------------------------------------------------
+        // Layer 2
+        // ------------------------------------------------
+
+        ctx.fillStyle = "#e5d5a5";
+
+        ctx.fillRect(
+            wallLeft + w1,
+            wallTop,
+            w2,
+            wallHeight
+        );
+
+
+        // ------------------------------------------------
+        // Layer 3
+        // ------------------------------------------------
+
+        ctx.fillStyle = "#aeb8c2";
+
+        ctx.fillRect(
+            wallLeft + w1 + w2,
+            wallTop,
+            w3,
+            wallHeight
+        );
+
+
+        // ------------------------------------------------
+        // Wall border
+        // ------------------------------------------------
+
+        ctx.strokeStyle = "#273746";
+
+        ctx.lineWidth = 3;
+
+        ctx.strokeRect(
+            wallLeft,
+            wallTop,
+            wallWidth,
+            wallHeight
+        );
+
+
+        // ------------------------------------------------
+        // Layer boundaries
+        // ------------------------------------------------
+
+        ctx.strokeStyle = "#596b78";
+
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            wallLeft + w1,
+            wallTop
+        );
+
+        ctx.lineTo(
+            wallLeft + w1,
+            wallTop + wallHeight
+        );
+
+        ctx.moveTo(
+            wallLeft + w1 + w2,
+            wallTop
+        );
+
+        ctx.lineTo(
+            wallLeft + w1 + w2,
+            wallTop + wallHeight
+        );
+
+        ctx.stroke();
+
+
+        // ------------------------------------------------
+        // Layer names
+        // ------------------------------------------------
+
+        ctx.font =
+            "bold 13px Segoe UI";
+
+        ctx.fillStyle = "#222";
+
+        ctx.textAlign = "center";
+
+
+        ctx.fillText(
+            D.material1,
+
+            wallLeft +
+            w1 / 2,
+
+            wallTop +
+            wallHeight / 2
+        );
+
+
+        ctx.fillText(
+            D.material2,
+
+            wallLeft +
+            w1 +
+            w2 / 2,
+
+            wallTop +
+            wallHeight / 2
+        );
+
+
+        ctx.fillText(
+            D.material3,
+
+            wallLeft +
+            w1 +
+            w2 +
+            w3 / 2,
+
+            wallTop +
+            wallHeight / 2
+        );
+
+
+        // ------------------------------------------------
+        // Thickness labels
+        // ------------------------------------------------
+
+        ctx.font =
+            "12px Segoe UI";
+
+        ctx.fillStyle = "#34495e";
+
+
+        ctx.fillText(
+            "L₁ = " +
+            D.L1.toFixed(3) +
+            " m",
+
+            wallLeft +
+            w1 / 2,
+
+            wallTop +
+            wallHeight +
+            25
+        );
+
+
+        ctx.fillText(
+            "L₂ = " +
+            D.L2.toFixed(3) +
+            " m",
+
+            wallLeft +
+            w1 +
+            w2 / 2,
+
+            wallTop +
+            wallHeight +
+            25
+        );
+
+
+        ctx.fillText(
+            "L₃ = " +
+            D.L3.toFixed(3) +
+            " m",
+
+            wallLeft +
+            w1 +
+            w2 +
+            w3 / 2,
+
+            wallTop +
+            wallHeight +
+            25
+        );
+
+
+        // ------------------------------------------------
+        // Heat flow direction
+        // ------------------------------------------------
+
+        const arrowY =
+            wallTop +
+            wallHeight / 2 +
+            55;
+
+
+        ctx.font =
+            "bold 14px Segoe UI";
+
+        ctx.fillStyle = "#c0392b";
+
+        ctx.textAlign = "center";
+
+
+        ctx.fillText(
+            "Heat flow direction",
+            W / 2,
+            arrowY - 20
+        );
+
+
+        drawArrow(
+            wallLeft - 100,
+            arrowY,
+            wallRight + 100,
+            arrowY,
+            "#e74c3c"
+        );
+
+
+        // ------------------------------------------------
+        // Animated heat particles
+        // ------------------------------------------------
+
+        const particleCount = 10;
+
+
+        for (
+            let i = 0;
+            i < particleCount;
+            i++
+        ) {
+
+            let p =
+                (
+                    progress +
+                    i / particleCount
+                ) % 1;
+
+
+            p = ease(p);
+
+
+            const x =
+                wallLeft -
+                30 +
+                p *
+                (wallWidth + 60);
+
+
+            const y =
+                wallTop +
+                wallHeight * 0.25 +
+                (i % 4) * 42;
+
+
+            drawParticle(
+                x,
+                y
+            );
+
+        }
+
+
+        // ------------------------------------------------
+        // Temperature points
+        // ------------------------------------------------
+
+        const tempPoints = [
+
+            {
+                x: wallLeft,
+                temp: D.T_inside
+            },
+
+            {
+                x: wallLeft + w1,
+                temp: D.T_interface1
+            },
+
+            {
+                x: wallLeft + w1 + w2,
+                temp: D.T_interface2
+            },
+
+            {
+                x: wallRight,
+                temp: D.T_outside
+            }
+
+        ];
+
+
+        tempPoints.forEach(
+            function(point) {
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    point.x,
+                    wallTop - 5,
+                    4,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fillStyle = "#17202a";
+
+                ctx.fill();
+
+
+                ctx.font =
+                    "bold 11px Segoe UI";
+
+                ctx.fillStyle =
+                    "#17202a";
+
+                ctx.fillText(
+                    point.temp.toFixed(1) +
+                    " °C",
+
+                    point.x,
+
+                    wallTop - 18
+                );
+
+            }
+        );
+
+
+        // ------------------------------------------------
+        // Heat transfer rate
+        // ------------------------------------------------
+
+        ctx.font =
+            "bold 15px Segoe UI";
+
+        ctx.fillStyle =
+            "#8e2c20";
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            "Q = " +
+            D.Q.toFixed(3) +
+            " W",
+
+            W / 2,
+            H - 35
+        );
+
+
+        // ------------------------------------------------
+        // Temperature difference
+        // ------------------------------------------------
+
+        ctx.font =
+            "12px Segoe UI";
+
+        ctx.fillStyle =
+            "#52616b";
+
+
+        ctx.fillText(
+            "ΔT = " +
+            (
+                D.T_inside -
+                D.T_outside
+            ).toFixed(2) +
+            " °C",
+
+            W / 2,
+            H - 15
+        );
+
+
+        requestAnimationFrame(
+            animate
+        );
+
+    }
+
+
+    // ----------------------------------------------------
+    // Start animation
+    // ----------------------------------------------------
+
+    requestAnimationFrame(
+        animate
+    );
+
+    </script>
+    """
+
+
+    ANIMATION_HTML = ANIMATION_HTML.replace(
+        "__DATA__",
+        animation_json
     )
 
 
-    ax1.barh(
-        0,
-        width1,
-        left=0,
-        height=0.5
+    components.html(
+        ANIMATION_HTML,
+        height=580
     )
-
-    ax1.barh(
-        0,
-        width2,
-        left=width1,
-        height=0.5
-    )
-
-    ax1.barh(
-        0,
-        width3,
-        left=width1 + width2,
-        height=0.5
-    )
-
-
-    ax1.text(
-        width1 / 2,
-        0,
-        material1,
-        ha="center",
-        va="center"
-    )
-
-
-    ax1.text(
-        width1 + width2 / 2,
-        0,
-        material2,
-        ha="center",
-        va="center"
-    )
-
-
-    ax1.text(
-        width1 + width2 + width3 / 2,
-        0,
-        material3,
-        ha="center",
-        va="center"
-    )
-
-
-    ax1.set_xlim(0, 1)
-
-    ax1.set_ylim(-0.5, 0.5)
-
-    ax1.axis("off")
-
-
-    st.pyplot(fig1)
 
 
     # ========================================================
@@ -545,6 +1387,8 @@ if calculate:
 
     st.pyplot(fig2)
 
+    plt.close(fig2)
+
 
     # ========================================================
     # LAYER TABLE
@@ -602,28 +1446,36 @@ if calculate:
     st.subheader("📐 Engineering Formulas")
 
 
-    st.write("Thermal resistance of each layer:")
+    st.write(
+        "Thermal resistance of each layer:"
+    )
 
     st.latex(
         r"R_i = \frac{L_i}{k_i A}"
     )
 
 
-    st.write("Total thermal resistance:")
+    st.write(
+        "Total thermal resistance:"
+    )
 
     st.latex(
         r"R_{total} = R_1 + R_2 + R_3"
     )
 
 
-    st.write("Heat transfer rate:")
+    st.write(
+        "Heat transfer rate:"
+    )
 
     st.latex(
         r"Q = \frac{T_i - T_o}{R_{total}}"
     )
 
 
-    st.write("Heat flux:")
+    st.write(
+        "Heat flux:"
+    )
 
     st.latex(
         r"q'' = \frac{Q}{A}"
@@ -676,6 +1528,7 @@ else:
 
     st.subheader("📐 Main Formula")
 
+
     st.latex(
         r"R_{total} = \frac{L_1}{k_1 A}"
         r"+\frac{L_2}{k_2 A}"
@@ -694,7 +1547,9 @@ else:
 
 st.divider()
 
+
 st.caption(
-    "D Conduction Heat Transfer through a Composite Wall | "
-    "Python + Streamlit | Diploma Mechanical Engineering - Semester 3"
+    "Conduction Heat Transfer through a Composite Wall | "
+    "Python + Streamlit | "
+    "Diploma Mechanical Engineering - Semester 3"
 )

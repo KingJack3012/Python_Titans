@@ -22,10 +22,16 @@ st.set_page_config(
 
 GROUP_NO = "Python Titans"
 
-MEMBERS = "Moksh Dhaval Dave | Jay Paraskumar Chaudhary | Anmol Arvindbhai Prajapati"
+MEMBERS = ["Moksh Dhaval Dave",
+"Jay Paraskumar Chaudhary",
+"Anmol Arvindbhai Prajapati"
+          ]
 
-ENROLLMENTS = "25012250610045 | 25012250610046 | 25012250610064"
-
+ENROLLMENTS = [
+    "Enrollment 1",
+    "Enrollment 2",
+    "Enrollment 3"
+]
 
 # ============================================================
 # MATERIAL DATABASE
@@ -50,11 +56,15 @@ st.title("🌡️ Conduction Heat Transfer Through a Composite Wall")
 st.subheader("Diploma in Mechanical Engineering - Semester 3")
 
 st.info(
-    GROUP_NO +
-    " <br>  | <br>  Members: <br>" +
-    MEMBERS +
-    "   | <br>  Enrollment: <br>" +
-    ENROLLMENTS
+    f"""
+**{GROUP_NO}**
+
+**Members:**
+{chr(10).join("- " + member for member in MEMBERS)}
+
+**Enrollments:**
+{chr(10).join("- " + enrollment for enrollment in ENROLLMENTS)}
+"""
 )
 
 st.write(

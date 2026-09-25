@@ -51,9 +51,9 @@ st.subheader("Diploma in Mechanical Engineering - Semester 3")
 
 st.info(
     GROUP_NO +
-    "   |   Members: " +
+    " <br>  | <br>  Members: <br>" +
     MEMBERS +
-    "   |   Enrollment: " +
+    "   | <br>  Enrollment: <br>" +
     ENROLLMENTS
 )
 

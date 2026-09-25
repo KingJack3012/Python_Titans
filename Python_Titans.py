@@ -22,7 +22,7 @@ st.set_page_config(
 
 GROUP_NO = "Python Titans"
 
-MEMBERS = "Moksh Dhaval Dave <br> | Jay Paraskumar Chaudhary | Anmol Arvindbhai Prajapati "
+MEMBERS = "Moksh Dhaval Dave \n | Jay Paraskumar Chaudhary | Anmol Arvindbhai Prajapati "
 
 ENROLLMENTS = "25012250610045 | 25012250610046 | 25012250610064"
 
